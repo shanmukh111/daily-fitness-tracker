@@ -3,262 +3,604 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Daily Routine & Tracker</title>
+  <title>Elite Routine & Weight Tracker</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-border: #334155;
+      --bg: #090d16;
+      --card: #131d2e;
+      --card-inner: #1c283f;
+      --border: #23334e;
       --text: #f8fafc;
       --subtext: #94a3b8;
       --accent: #38bdf8;
-      --green: #22c55e;
+      --green: #10b981;
       --orange: #f97316;
+      --purple: #8b5cf6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 60px; }
-    .header { margin-bottom: 16px; }
-    .date-badge { font-size: 0.85rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    h1 { font-size: 1.6rem; margin-top: 4px; }
-    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
-    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .toggle-container { display: flex; justify-content: space-between; align-items: center; background: #0b1120; padding: 12px; border-radius: 10px; margin-bottom: 14px; }
-    .switch-btn { background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    .switch-btn.active { background: var(--green); }
-    .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #283548; font-size: 0.95rem; }
-    .checklist-item:last-child { border-bottom: none; }
-    .checklist-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--green); margin-top: 2px; }
-    .item-meta { font-size: 0.8rem; color: var(--subtext); margin-top: 2px; }
-    .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-    .badge-prep { background: #7c2d12; color: #fdba74; }
-    .badge-tag { background: #0369a1; color: #bae6fd; }
-    .exercise-list { list-style: none; margin-top: 6px; }
-    .exercise-list li { font-size: 0.9rem; padding: 4px 0; color: #e2e8f0; display: flex; justify-content: space-between; }
-    .reps { color: var(--accent); font-weight: 600; }
-    .alert-box { background: rgba(249, 115, 22, 0.15); border: 1px solid var(--orange); color: #fdba74; padding: 12px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 16px; }
+    body { background: var(--bg); color: var(--text); padding: 14px; padding-bottom: 80px; max-width: 600px; margin: auto; }
+    
+    /* Top Bar & Nav */
+    .nav-tabs { display: flex; background: var(--card); border-radius: 12px; padding: 4px; margin-bottom: 14px; border: 1px solid var(--border); }
+    .nav-btn { flex: 1; padding: 10px 4px; background: none; border: none; color: var(--subtext); font-weight: 600; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .nav-btn.active { background: var(--accent); color: #041226; font-weight: 700; }
+
+    /* Day Picker Header */
+    .day-header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 14px; margin-bottom: 14px; border: 1px solid var(--border); }
+    .day-nav-btn { background: var(--card-inner); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .day-title { text-align: center; }
+    .day-title h2 { font-size: 1.15rem; font-weight: 700; }
+    .day-title span { font-size: 0.8rem; color: var(--accent); }
+
+    /* Cards */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+    .card-title { font-size: 1rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    
+    /* Progress Bar */
+    .progress-box { margin-bottom: 14px; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--subtext); margin-bottom: 6px; }
+    .progress-bar-bg { background: var(--card-inner); border-radius: 8px; height: 10px; overflow: hidden; }
+    .progress-bar-fill { background: linear-gradient(90deg, var(--accent), var(--green)); height: 100%; width: 0%; transition: width 0.3s ease; }
+
+    /* Basketball Switch */
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--card-inner); padding: 12px; border-radius: 12px; margin-bottom: 14px; border: 1px solid var(--border); }
+    .switch-btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+    .switch-btn.active { background: var(--green); color: white; }
+    .switch-btn.inactive { background: #334155; color: #94a3b8; }
+
+    /* Checklists */
+    .item-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .item-row:last-child { border-bottom: none; }
+    .item-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--green); margin-top: 2px; cursor: pointer; }
+    .item-info { flex: 1; }
+    .item-title { font-size: 0.95rem; font-weight: 600; }
+    .item-desc { font-size: 0.8rem; color: var(--subtext); margin-top: 2px; line-height: 1.3; }
+
+    /* Gym Exercises */
+    .exercise-box { background: var(--card-inner); padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .exercise-name { font-size: 0.92rem; font-weight: 600; }
+    .exercise-sets { font-size: 0.82rem; color: var(--accent); font-weight: 700; }
+
+    /* Rest Timer */
+    .timer-container { display: flex; align-items: center; justify-content: space-between; background: #0c1424; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-top: 10px; }
+    .timer-display { font-size: 1.1rem; font-weight: 700; color: var(--orange); }
+    .timer-btns button { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; margin-left: 4px; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+    .stat-val { font-size: 1.3rem; font-weight: 800; color: var(--accent); margin-top: 4px; }
+    .stat-label { font-size: 0.75rem; color: var(--subtext); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Form Inputs */
+    .input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .input-row input { flex: 1; background: var(--card-inner); border: 1px solid var(--border); color: white; padding: 10px 12px; border-radius: 10px; font-size: 0.95rem; }
+    .btn-primary { background: var(--accent); color: #041226; border: none; font-weight: 700; padding: 10px 18px; border-radius: 10px; cursor: pointer; }
+
+    /* Weight History Table */
+    .history-list { max-height: 180px; overflow-y: auto; font-size: 0.85rem; }
+    .history-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .history-delete { color: #f87171; cursor: pointer; font-size: 0.8rem; margin-left: 10px; }
+
+    .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+    .badge-alert { background: #7c2d12; color: #fdba74; }
+    .badge-info { background: #0369a1; color: #bae6fd; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="date-badge" id="todayDate"></div>
-    <h1 id="todayTitle">Today's Protocol</h1>
+  <!-- Top Tab Navigation -->
+  <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab('todayTab')">Daily Plan</button>
+    <button class="nav-btn" onclick="switchTab('statsTab')">Weight Analytics</button>
+    <button class="nav-btn" onclick="switchTab('prepTab')">Meal Prep</button>
   </div>
 
-  <div id="prepAlert" style="display: none;" class="alert-box">
-    <strong>Meal Prep Alert:</strong> <span id="prepText"></span>
-  </div>
-
-  <!-- Basketball Toggle -->
-  <div class="toggle-container">
-    <div>
-      <div style="font-weight: 600; font-size: 0.95rem;">Playing Basketball Tonight?</div>
-      <div class="item-meta" id="basketballStatusText">Cardio rules update automatically</div>
+  <!-- TAB 1: DAILY PLAN -->
+  <div id="todayTab">
+    <div class="day-header">
+      <button class="day-nav-btn" onclick="changeDay(-1)">‹</button>
+      <div class="day-title">
+        <h2 id="viewDayName">Monday</h2>
+        <span id="viewDateStr">Oct 5, 2026</span>
+      </div>
+      <button class="day-nav-btn" onclick="changeDay(1)">›</button>
     </div>
-    <button class="switch-btn active" id="bballBtn" onclick="toggleBasketball()">YES</button>
+
+    <!-- Daily Completion Meter -->
+    <div class="progress-box">
+      <div class="progress-labels">
+        <span>Daily Protocol Completion</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+    </div>
+
+    <!-- Prep Alert (Conditional) -->
+    <div id="prepAlertBox" style="display:none; background: rgba(249, 115, 22, 0.15); border: 1px solid var(--orange); color: #fdba74; padding: 12px; border-radius: 12px; margin-bottom: 14px; font-size: 0.85rem;">
+      <strong>⚠️ Prep Reminder:</strong> <span id="prepAlertText"></span>
+    </div>
+
+    <!-- Basketball Switch -->
+    <div class="toggle-row">
+      <div>
+        <div style="font-weight: 600; font-size: 0.95rem;">Playing Basketball Tonight?</div>
+        <div style="font-size: 0.78rem; color: var(--subtext);" id="bballDesc">Lifting only at 5:30 • No gym cardio</div>
+      </div>
+      <button class="switch-btn active" id="bballToggleBtn" onclick="toggleBasketball()">YES</button>
+    </div>
+
+    <!-- Nutrition Checklist -->
+    <div class="card">
+      <div class="card-title">
+        <span>Diet & Meals</span>
+        <span class="badge badge-info">~2,000 kcal</span>
+      </div>
+      <div id="mealsChecklist"></div>
+    </div>
+
+    <!-- Workout Plan -->
+    <div class="card">
+      <div class="card-title">
+        <span id="workoutTitle">Workout Protocol</span>
+        <span class="badge badge-info">5:30 PM</span>
+      </div>
+      <div id="workoutContent"></div>
+
+      <!-- Rest Timer -->
+      <div class="timer-container" id="restTimerBox">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--subtext);">REST TIMER</div>
+          <div class="timer-display" id="timerValue">00:00</div>
+        </div>
+        <div class="timer-btns">
+          <button onclick="startTimer(60)">60s</button>
+          <button onclick="startTimer(90)">90s</button>
+          <button onclick="resetTimer()">Reset</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Meals Card -->
-  <div class="card">
-    <div class="card-title">
-      <span>Nutrition & Meal Plan</span>
-      <span class="badge badge-tag" id="calorieBadge">~2,000 kcal</span>
+  <!-- TAB 2: WEIGHT ANALYTICS -->
+  <div id="statsTab" style="display:none;">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Current Weight</div>
+        <div class="stat-val" id="statCurrent">-- kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">7-Day Rolling Avg</div>
+        <div class="stat-val" id="stat7Day">-- kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Lost</div>
+        <div class="stat-val" id="statLost">-- kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Goal Target</div>
+        <div class="stat-val" style="color: var(--green);">80.0 kg</div>
+      </div>
     </div>
-    <div id="mealChecklist"></div>
+
+    <!-- Log Weight Form -->
+    <div class="card">
+      <div class="card-title">Log Morning Weight</div>
+      <div class="input-row">
+        <input type="number" step="0.1" id="weightInput" placeholder="Enter weight (e.g. 89.8)">
+        <button class="btn-primary" onclick="logWeight()">Save</button>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--subtext);">Weigh in immediately upon waking on an empty stomach.</div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-title">Weight Trend & 7-Day Average</div>
+      <canvas id="weightChart" style="max-height: 240px;"></canvas>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-title">Entry History</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
   </div>
 
-  <!-- Workout Card -->
-  <div class="card">
-    <div class="card-title">
-      <span id="workoutName">Workout</span>
-      <span class="badge badge-tag">5:30 PM</span>
+  <!-- TAB 3: BATCH PREP SCHEDULE -->
+  <div id="prepTab" style="display:none;">
+    <div class="card">
+      <div class="card-title" style="color: var(--accent);">Sunday Batch Prep (~1 hr)</div>
+      <ul style="list-style: none; font-size: 0.9rem; line-height: 1.6;">
+        <li>🥚 <strong>Boil 12 Eggs:</strong> Refrigerate for Mon-Wed breakfasts and snacks.</li>
+        <li>🍛 <strong>Cook Fresh:</strong> Egg curry + yellow dal + rice for Sunday lunch/dinner.</li>
+        <li>🍗 <strong>Batch Cook:</strong> Chicken curry for Monday lunch & dinner.</li>
+        <li>🫘 <strong>Batch Cook:</strong> Chole for Tuesday lunch & dinner (soak Saturday night).</li>
+      </ul>
     </div>
-    <div id="workoutDetails"></div>
+
+    <div class="card">
+      <div class="card-title" style="color: var(--accent);">Wednesday Batch Prep (~1 hr)</div>
+      <ul style="list-style: none; font-size: 0.9rem; line-height: 1.6;">
+        <li>🥚 <strong>Boil 12 Eggs:</strong> Refrigerate for Thu-Sat breakfasts and snacks.</li>
+        <li>🍗 <strong>Batch Cook Chicken:</strong> Portions for Wed & Fri (freeze Friday's portion).</li>
+        <li>🫘 <strong>Batch Cook Rajma:</strong> For Thursday lunch & dinner (soak Tuesday night).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color: var(--accent);">Saturday Morning (15 mins)</div>
+      <ul style="list-style: none; font-size: 0.9rem; line-height: 1.6;">
+        <li>🥣 <strong>One-Pot Soya Pulao:</strong> 40g dry soya chunks + 150g rice + veg in pressure cooker.</li>
+      </ul>
+    </div>
   </div>
 
   <script>
-    const routineData = {
-      0: { // Sunday
-        day: "Sunday",
-        focus: "Full Rest Day",
-        workout: [],
-        lunchDinner: "Egg curry (3–4 eggs) + dal (150g) + rice (120g) + 100g curd",
-        sides: "Dal + Curd",
-        prep: "Cook fresh egg curry & dal. Batch cook Monday's chicken curry. Boil 12 eggs. Soak chole tonight for Tuesday."
+    // --- STATIC WORKOUT & DIET DATABASE ---
+    const scheduleData = {
+      0: {
+        name: "Sunday", focus: "Full Rest Day",
+        meals: "Egg curry (3–4 eggs) + dal (150g) + rice (120g) + 100g curd",
+        sides: "Dal + Curd", prep: "Cook egg curry & dal fresh. Batch cook Monday's chicken. Boil 12 eggs.",
+        exercises: []
       },
-      1: { // Monday
-        day: "Monday",
-        focus: "Chest",
-        workout: [
+      1: {
+        name: "Monday", focus: "Chest",
+        meals: "Chicken curry (150g) + cooked rice (150g)",
+        sides: "Cucumber & tomato salad", prep: "",
+        exercises: [
           { name: "DB Bench Press", sets: "3 sets × 10–12" },
           { name: "Incline DB Press", sets: "3 sets × 10–12" },
           { name: "Cable Chest Fly", sets: "3 sets × 10–12" },
           { name: "Triceps Pushdown", sets: "2 sets × 10–12" }
-        ],
-        lunchDinner: "Chicken curry (150g) + cooked rice (150g)",
-        sides: "Cucumber & tomato salad",
-        prep: ""
+        ]
       },
-      2: { // Tuesday
-        day: "Tuesday",
-        focus: "Back",
-        workout: [
+      2: {
+        name: "Tuesday", focus: "Back",
+        meals: "Chole curry (150g) + cooked rice (150g)",
+        sides: "2 boiled eggs + 100g curd", prep: "Soak rajma tonight for Thursday.",
+        exercises: [
           { name: "Lat Pulldown", sets: "3 sets × 10–12" },
           { name: "Seated Cable Row", sets: "3 sets × 10–12" },
           { name: "One-Arm DB Row", sets: "3 sets × 10–12" },
           { name: "Face Pulls", sets: "3 sets × 15" },
           { name: "Rear Delt Machine Fly", sets: "3 sets × 12" }
-        ],
-        lunchDinner: "Chole curry (150g) + cooked rice (150g)",
-        sides: "2 boiled eggs + 100g curd",
-        prep: "Soak rajma tonight for Thursday."
+        ]
       },
-      3: { // Wednesday
-        day: "Wednesday",
-        focus: "Legs (Moderate)",
-        workout: [
-          { name: "Leg Press (2-3 reps reserve)", sets: "3 sets × 10–12" },
+      3: {
+        name: "Wednesday", focus: "Legs (Moderate Volume)",
+        meals: "Chicken curry (150g) + cooked rice (150g)",
+        sides: "Cucumber & tomato salad", prep: "Cook Wed & Fri chicken. Freeze Friday's box. Boil 12 eggs. Cook rajma for Thu.",
+        exercises: [
+          { name: "Leg Press (2-3 reps in reserve)", sets: "3 sets × 10–12" },
           { name: "Romanian Deadlift", sets: "2 sets × 10–12" },
           { name: "Leg Curls", sets: "3 sets × 10–12" },
           { name: "Calf Raises", sets: "3 sets × 12–15" }
-        ],
-        lunchDinner: "Chicken curry (150g) + cooked rice (150g)",
-        sides: "Cucumber & tomato salad",
-        prep: "Cook chicken curry for Wed & Fri (freeze Friday's box). Boil 12 eggs. Cook rajma for Thursday."
+        ]
       },
-      4: { // Thursday
-        day: "Thursday",
-        focus: "Shoulders",
-        workout: [
+      4: {
+        name: "Thursday", focus: "Shoulders",
+        meals: "Rajma curry (150g) + cooked rice (150g)",
+        sides: "2 boiled eggs + 100g curd", prep: "",
+        exercises: [
           { name: "Seated DB Shoulder Press", sets: "3 sets × 10–12" },
           { name: "DB Lateral Raises", sets: "4 sets × 12–15" },
           { name: "Rear Delt Reverse Fly", sets: "3 sets × 12–15" },
           { name: "DB Shrugs", sets: "3 sets × 12–15" }
-        ],
-        lunchDinner: "Rajma curry (150g) + cooked rice (150g)",
-        sides: "2 boiled eggs + 100g curd",
-        prep: ""
+        ]
       },
-      5: { // Friday
-        day: "Friday",
-        focus: "Arms & Abs",
-        workout: [
+      5: {
+        name: "Friday", focus: "Arms & Abs",
+        meals: "Chicken curry (defrost Wed batch) + rice (150g)",
+        sides: "Cucumber & tomato salad", prep: "",
+        exercises: [
           { name: "DB Bicep Curls", sets: "3 sets × 10–12" },
           { name: "Hammer Curls", sets: "3 sets × 10–12" },
           { name: "Triceps Rope Pushdown", sets: "3 sets × 10–12" },
           { name: "Overhead Triceps Extension", sets: "3 sets × 10–12" },
           { name: "Hanging Knee Raises", sets: "3 sets × 10–12" },
           { name: "Forearm Plank", sets: "3 sets × 40 sec" }
-        ],
-        lunchDinner: "Chicken curry (defrost from Wed) + cooked rice (150g)",
-        sides: "Cucumber & tomato salad",
-        prep: ""
+        ]
       },
-      6: { // Saturday
-        day: "Saturday",
-        focus: "Rest / Active Play",
-        workout: [],
-        lunchDinner: "Soya pulao (40g dry soya + 150g rice)",
-        sides: "2 boiled eggs + 100g curd",
-        prep: "Cook soya chunk pulao in pressure cooker (15 min). Soak chana tonight for Tuesday."
+      6: {
+        name: "Saturday", focus: "Active Recovery",
+        meals: "Soya pulao (40g dry soya + 150g rice)",
+        sides: "2 boiled eggs + 100g curd", prep: "Cook soya chunk pulao in pressure cooker (15m). Soak chana tonight for Tue.",
+        exercises: []
       }
     };
 
-    let isBasketballToday = true;
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const current = routineData[dayOfWeek];
+    // --- STATE MANAGEMENT ---
+    let viewedDate = new Date();
+    let weightHistory = JSON.parse(localStorage.getItem('user_weight_history')) || [
+      { date: '2026-10-01', weight: 90.2 }
+    ];
+    let chartInstance = null;
+    let timerInterval = null;
 
-    function toggleBasketball() {
-      isBasketballToday = !isBasketballToday;
-      const btn = document.getElementById("bballBtn");
-      if (isBasketballToday) {
-        btn.classList.add("active");
-        btn.innerText = "YES";
-        document.getElementById("basketballStatusText").innerText = "Lifting only at gym • 10-11 PM basketball";
-      } else {
-        btn.classList.remove("active");
-        btn.innerText = "NO";
-        document.getElementById("basketballStatusText").innerText = "Lifting + 25-30m Gym Cardio • No late basketball";
-      }
-      render();
+    function getDateKey(d) {
+      return d.toISOString().split('T')[0];
     }
 
-    function render() {
-      document.getElementById("todayDate").innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-      document.getElementById("todayTitle").innerText = `${current.day}: ${current.focus}`;
+    function switchTab(tabId) {
+      document.querySelectorAll('#todayTab, #statsTab, #prepTab').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      event.target.classList.add('active');
+      if (tabId === 'statsTab') renderStats();
+    }
+
+    function changeDay(delta) {
+      viewedDate.setDate(viewedDate.getDate() + delta);
+      renderDailyView();
+    }
+
+    function isBasketballOnDate(dateKey) {
+      const stored = localStorage.getItem('bball_' + dateKey);
+      return stored !== null ? JSON.parse(stored) : true;
+    }
+
+    function toggleBasketball() {
+      const dateKey = getDateKey(viewedDate);
+      const current = isBasketballOnDate(dateKey);
+      localStorage.setItem('bball_' + dateKey, JSON.stringify(!current));
+      renderDailyView();
+    }
+
+    function toggleCheck(id) {
+      const dateKey = getDateKey(viewedDate);
+      const checks = JSON.parse(localStorage.getItem('checks_' + dateKey)) || {};
+      checks[id] = document.getElementById(id).checked;
+      localStorage.setItem('checks_' + dateKey, JSON.stringify(checks));
+      updateProgressBar();
+    }
+
+    function updateProgressBar() {
+      const checkboxes = document.querySelectorAll('#todayTab input[type="checkbox"]');
+      if (checkboxes.length === 0) return;
+      let checked = 0;
+      checkboxes.forEach(c => { if (c.checked) checked++; });
+      const percent = Math.round((checked / checkboxes.length) * 100);
+      document.getElementById('progressPercent').innerText = percent + '%';
+      document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    function renderDailyView() {
+      const dayIndex = viewedDate.getDay();
+      const current = scheduleData[dayIndex];
+      const dateKey = getDateKey(viewedDate);
+      const isBasketball = isBasketballOnDate(dateKey);
+
+      document.getElementById('viewDayName').innerText = current.name;
+      document.getElementById('viewDateStr').innerText = viewedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       // Prep Alert
-      const prepBox = document.getElementById("prepAlert");
+      const prepBox = document.getElementById('prepAlertBox');
       if (current.prep) {
-        prepBox.style.display = "block";
-        document.getElementById("prepText").innerText = current.prep;
+        prepBox.style.display = 'block';
+        document.getElementById('prepAlertText').innerText = current.prep;
       } else {
-        prepBox.style.display = "none";
+        prepBox.style.display = 'none';
       }
 
-      // Meal List
-      const meals = [
-        { name: "Morning Weigh-in", meta: "Empty stomach on waking, track weekly average" },
-        { name: "Breakfast (7:15 AM)", meta: "60g oats in water + 4 whole eggs" },
-        { name: "Packed Lunch (1:00 PM)", meta: `${current.lunchDinner} + ${current.sides}` },
-        { name: "Pre-Gym Snack (5:15 PM)", meta: "1 banana + 1 wheat bread + 16g Pintola PB" },
-        { name: "Dinner (7:30 PM)", meta: `${current.lunchDinner} + ${current.sides}` },
-        { name: "Post-Dinner Treat (8:30 PM)", meta: "10–15g dark chocolate (2-3 squares)" },
-        isBasketballToday 
-          ? { name: "Post-Game Recovery (11:15 PM)", meta: "1 glass (250 ml) milk" }
-          : { name: "Night Snack (Optional)", meta: "100g light curd if hungry (skip milk)" }
+      // Basketball Toggle UI
+      const bBtn = document.getElementById('bballToggleBtn');
+      const bDesc = document.getElementById('bballDesc');
+      if (isBasketball) {
+        bBtn.className = "switch-btn active";
+        bBtn.innerText = "YES";
+        bDesc.innerText = "Lifting only at 5:30 • 10-11 PM Basketball";
+      } else {
+        bBtn.className = "switch-btn inactive";
+        bBtn.innerText = "NO";
+        bDesc.innerText = "Lifting + 25-30m Gym Cardio • No late basketball";
+      }
+
+      // Meals Checklist
+      const savedChecks = JSON.parse(localStorage.getItem('checks_' + dateKey)) || {};
+      const mealItems = [
+        { id: 'm_weigh', name: 'Morning Weigh-in', desc: 'On empty stomach right after waking up' },
+        { id: 'm_bfast', name: 'Breakfast (7:15 AM)', desc: '60g oats cooked in water + 4 whole eggs' },
+        { id: 'm_lunch', name: 'Packed Lunch (1:00 PM)', desc: `${current.meals} + ${current.sides}` },
+        { id: 'm_pre',   name: 'Pre-Gym Snack (5:15 PM)', desc: '1 banana + 1 wheat bread + 16g Pintola PB' },
+        { id: 'm_din',   name: 'Dinner (7:30 PM)', desc: `${current.meals} + ${current.sides}` },
+        { id: 'm_treat', name: 'Post-Dinner Treat (8:30 PM)', desc: '10–15g dark chocolate (2-3 squares)' },
+        isBasketball 
+          ? { id: 'm_milk', name: 'Post-Game Milk (11:15 PM)', desc: '1 glass (250 ml) milk after basketball' }
+          : { id: 'm_curd', name: 'Night Snack (Optional)', desc: '100g curd if hungry (skip milk)' }
       ];
 
-      const mealListEl = document.getElementById("mealChecklist");
-      mealListEl.innerHTML = meals.map((m, i) => `
-        <div class="checklist-item">
-          <input type="checkbox" id="m_${dayOfWeek}_${i}">
-          <div>
-            <div>${m.name}</div>
-            <div class="item-meta">${m.meta}</div>
+      document.getElementById('mealsChecklist').innerHTML = mealItems.map(m => `
+        <div class="item-row">
+          <input type="checkbox" id="${m.id}" ${savedChecks[m.id] ? 'checked' : ''} onchange="toggleCheck('${m.id}')">
+          <div class="item-info">
+            <div class="item-title">${m.name}</div>
+            <div class="item-desc">${m.desc}</div>
           </div>
         </div>
       `).join('');
 
-      // Workout Details
-      const workoutEl = document.getElementById("workoutDetails");
-      document.getElementById("workoutName").innerText = current.focus;
+      // Workout Section
+      document.getElementById('workoutTitle').innerText = `${current.focus}`;
+      const workoutEl = document.getElementById('workoutContent');
+      const timerBox = document.getElementById('restTimerBox');
 
-      if (dayOfWeek === 0) {
-        workoutEl.innerHTML = `<p style="color: var(--subtext); padding: 8px 0;">Full rest day! No gym, no cardio, no basketball. Let your body recover.</p>`;
-      } else if (dayOfWeek === 6) {
-        workoutEl.innerHTML = isBasketballToday 
-          ? `<p style="color: var(--subtext); padding: 8px 0;">No gym today. Rest up for 10 PM Basketball!</p>`
-          : `<p style="color: var(--subtext); padding: 8px 0;">Non-basketball Saturday: Do 30 min brisk incline walk or easy cycle.</p>`;
+      if (dayIndex === 0) {
+        timerBox.style.display = 'none';
+        workoutEl.innerHTML = `<p style="color: var(--subtext); padding: 8px 0; font-size: 0.9rem;">Rest day! Relax, hit your water goal, and recover.</p>`;
+      } else if (dayIndex === 6) {
+        timerBox.style.display = 'none';
+        workoutEl.innerHTML = isBasketball
+          ? `<p style="color: var(--subtext); padding: 8px 0; font-size: 0.9rem;">No gym session today. Save energy for 10 PM Basketball!</p>`
+          : `<p style="color: var(--subtext); padding: 8px 0; font-size: 0.9rem;">No basketball tonight: Do 30 min incline walk or steady cycle.</p>`;
       } else {
-        let exercisesHtml = `<ul class="exercise-list">` + 
-          current.workout.map(e => `<li><span>${e.name}</span><span class="reps">${e.sets}</span></li>`).join('') + 
-          `</ul>`;
+        timerBox.style.display = 'flex';
+        let html = current.exercises.map(e => `
+          <div class="exercise-box">
+            <span class="exercise-name">${e.name}</span>
+            <span class="exercise-sets">${e.sets}</span>
+          </div>
+        `).join('');
 
-        if (!isBasketballToday) {
-          if (dayOfWeek === 3) {
-            exercisesHtml += `
-              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--card-border);">
-                <div style="color: var(--orange); font-weight: 600; font-size: 0.9rem;">Cardio (Leg Day Protection):</div>
-                <div class="item-meta">25 min stationary bike or 10-12% incline treadmill walk @ 5.5 km/h. (No sprints).</div>
+        if (!isBasketball) {
+          if (dayIndex === 3) {
+            html += `
+              <div style="background: rgba(249, 115, 22, 0.1); border: 1px dashed var(--orange); border-radius: 10px; padding: 10px; margin-top: 8px;">
+                <div style="color: var(--orange); font-weight: 700; font-size: 0.85rem;">Cardio (Leg Day Protection):</div>
+                <div style="font-size: 0.8rem; color: #fdba74; margin-top: 2px;">25 min stationary cycle or 10-12% incline walk @ 5.5 km/h.</div>
               </div>`;
           } else {
-            exercisesHtml += `
-              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--card-border);">
-                <div style="color: var(--orange); font-weight: 600; font-size: 0.9rem;">Gym Cardio (25–30 min):</div>
-                <div class="item-meta">1. Treadmill: 1m @ 10-11 km/h + 2m walk @ 5-6 km/h (Repeat 6×)</div>
-                <div class="item-meta">2. Stationary Bike: 8–10 min steady cool-down</div>
+            html += `
+              <div style="background: rgba(249, 115, 22, 0.1); border: 1px dashed var(--orange); border-radius: 10px; padding: 10px; margin-top: 8px;">
+                <div style="color: var(--orange); font-weight: 700; font-size: 0.85rem;">Gym Cardio (25–30 min):</div>
+                <div style="font-size: 0.8rem; color: #fdba74; margin-top: 2px;">1. Treadmill: 1m @ 10-11 km/h + 2m walk @ 5-6 km/h (Repeat 6×)</div>
+                <div style="font-size: 0.8rem; color: #fdba74; margin-top: 2px;">2. Stationary Bike: 8–10 min steady cool-down.</div>
               </div>`;
           }
         }
-        workoutEl.innerHTML = exercisesHtml;
+        workoutEl.innerHTML = html;
+      }
+
+      updateProgressBar();
+    }
+
+    // --- WEIGHT & CHART LOGIC ---
+    function logWeight() {
+      const input = document.getElementById('weightInput');
+      const val = parseFloat(input.value);
+      if (!val || val < 40 || val > 200) {
+        alert("Please enter a valid weight in kg.");
+        return;
+      }
+      const todayStr = getDateKey(new Date());
+      // Replace if entry for today exists, else add
+      const idx = weightHistory.findIndex(e => e.date === todayStr);
+      if (idx >= 0) {
+        weightHistory[idx].weight = val;
+      } else {
+        weightHistory.push({ date: todayStr, weight: val });
+      }
+      weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+      localStorage.setItem('user_weight_history', JSON.stringify(weightHistory));
+      input.value = '';
+      renderStats();
+    }
+
+    function deleteWeight(idx) {
+      if (confirm("Delete this entry?")) {
+        weightHistory.splice(idx, 1);
+        localStorage.setItem('user_weight_history', JSON.stringify(weightHistory));
+        renderStats();
       }
     }
 
-    render();
+    function renderStats() {
+      if (weightHistory.length === 0) return;
+      const latest = weightHistory[weightHistory.length - 1].weight;
+      const start = 90.2; // Initial assessment benchmark
+      const lost = (start - latest).toFixed(1);
+
+      // Calculate 7-Day Rolling Average
+      const recent7 = weightHistory.slice(-7);
+      const avg7 = (recent7.reduce((acc, curr) => acc + curr.weight, 0) / recent7.length).toFixed(1);
+
+      document.getElementById('statCurrent').innerText = latest + ' kg';
+      document.getElementById('stat7Day').innerText = avg7 + ' kg';
+      document.getElementById('statLost').innerText = (lost > 0 ? `-${lost}` : `${Math.abs(lost)}`) + ' kg';
+
+      // History Table
+      const historyEl = document.getElementById('historyList');
+      historyEl.innerHTML = [...weightHistory].reverse().map((entry, i) => {
+        const realIdx = weightHistory.length - 1 - i;
+        return `
+          <div class="history-row">
+            <span>${entry.date}</span>
+            <span><strong>${entry.weight.toFixed(1)} kg</strong>
+            <span class="history-delete" onclick="deleteWeight(${realIdx})">✕</span></span>
+          </div>`;
+      }).join('');
+
+      // Build 7-Day Moving Avg array for the chart
+      const dates = weightHistory.map(e => e.date.substring(5));
+      const weights = weightHistory.map(e => e.weight);
+      const movingAvg = weights.map((_, i, arr) => {
+        const slice = arr.slice(Math.max(0, i - 6), i + 1);
+        return (slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(1);
+      });
+
+      // Chart.js render
+      const ctx = document.getElementById('weightChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: 'Daily Weight (kg)',
+              data: weights,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.1)',
+              tension: 0.3,
+              pointRadius: 4,
+              fill: true
+            },
+            {
+              label: '7-Day Trend',
+              data: movingAvg,
+              borderColor: '#10b981',
+              borderDash: [5, 5],
+              tension: 0.3,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 10 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: '#1e293b' } }
+          }
+        }
+      });
+    }
+
+    // --- REST TIMER ---
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      let left = seconds;
+      const display = document.getElementById('timerValue');
+      function update() {
+        const m = Math.floor(left / 60);
+        const s = left % 60;
+        display.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        if (left <= 0) {
+          clearInterval(timerInterval);
+          display.innerText = "DONE!";
+        }
+        left--;
+      }
+      update();
+      timerInterval = setInterval(update, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      document.getElementById('timerValue').innerText = "00:00";
+    }
+
+    // Initial render
+    renderDailyView();
   </script>
 </body>
 </html>
