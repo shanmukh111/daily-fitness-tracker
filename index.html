@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Daily Routine & Tracker</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --orange: #f97316;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 60px; }
+    .header { margin-bottom: 16px; }
+    .date-badge { font-size: 0.85rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    h1 { font-size: 1.6rem; margin-top: 4px; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .toggle-container { display: flex; justify-content: space-between; align-items: center; background: #0b1120; padding: 12px; border-radius: 10px; margin-bottom: 14px; }
+    .switch-btn { background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .switch-btn.active { background: var(--green); }
+    .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #283548; font-size: 0.95rem; }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--green); margin-top: 2px; }
+    .item-meta { font-size: 0.8rem; color: var(--subtext); margin-top: 2px; }
+    .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .badge-prep { background: #7c2d12; color: #fdba74; }
+    .badge-tag { background: #0369a1; color: #bae6fd; }
+    .exercise-list { list-style: none; margin-top: 6px; }
+    .exercise-list li { font-size: 0.9rem; padding: 4px 0; color: #e2e8f0; display: flex; justify-content: space-between; }
+    .reps { color: var(--accent); font-weight: 600; }
+    .alert-box { background: rgba(249, 115, 22, 0.15); border: 1px solid var(--orange); color: #fdba74; padding: 12px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="date-badge" id="todayDate"></div>
+    <h1 id="todayTitle">Today's Protocol</h1>
+  </div>
+
+  <div id="prepAlert" style="display: none;" class="alert-box">
+    <strong>Meal Prep Alert:</strong> <span id="prepText"></span>
+  </div>
+
+  <!-- Basketball Toggle -->
+  <div class="toggle-container">
+    <div>
+      <div style="font-weight: 600; font-size: 0.95rem;">Playing Basketball Tonight?</div>
+      <div class="item-meta" id="basketballStatusText">Cardio rules update automatically</div>
+    </div>
+    <button class="switch-btn active" id="bballBtn" onclick="toggleBasketball()">YES</button>
+  </div>
+
+  <!-- Meals Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>Nutrition & Meal Plan</span>
+      <span class="badge badge-tag" id="calorieBadge">~2,000 kcal</span>
+    </div>
+    <div id="mealChecklist"></div>
+  </div>
+
+  <!-- Workout Card -->
+  <div class="card">
+    <div class="card-title">
+      <span id="workoutName">Workout</span>
+      <span class="badge badge-tag">5:30 PM</span>
+    </div>
+    <div id="workoutDetails"></div>
+  </div>
+
+  <script>
+    const routineData = {
+      0: { // Sunday
+        day: "Sunday",
+        focus: "Full Rest Day",
+        workout: [],
+        lunchDinner: "Egg curry (3–4 eggs) + dal (150g) + rice (120g) + 100g curd",
+        sides: "Dal + Curd",
+        prep: "Cook fresh egg curry & dal. Batch cook Monday's chicken curry. Boil 12 eggs. Soak chole tonight for Tuesday."
+      },
+      1: { // Monday
+        day: "Monday",
+        focus: "Chest",
+        workout: [
+          { name: "DB Bench Press", sets: "3 sets × 10–12" },
+          { name: "Incline DB Press", sets: "3 sets × 10–12" },
+          { name: "Cable Chest Fly", sets: "3 sets × 10–12" },
+          { name: "Triceps Pushdown", sets: "2 sets × 10–12" }
+        ],
+        lunchDinner: "Chicken curry (150g) + cooked rice (150g)",
+        sides: "Cucumber & tomato salad",
+        prep: ""
+      },
+      2: { // Tuesday
+        day: "Tuesday",
+        focus: "Back",
+        workout: [
+          { name: "Lat Pulldown", sets: "3 sets × 10–12" },
+          { name: "Seated Cable Row", sets: "3 sets × 10–12" },
+          { name: "One-Arm DB Row", sets: "3 sets × 10–12" },
+          { name: "Face Pulls", sets: "3 sets × 15" },
+          { name: "Rear Delt Machine Fly", sets: "3 sets × 12" }
+        ],
+        lunchDinner: "Chole curry (150g) + cooked rice (150g)",
+        sides: "2 boiled eggs + 100g curd",
+        prep: "Soak rajma tonight for Thursday."
+      },
+      3: { // Wednesday
+        day: "Wednesday",
+        focus: "Legs (Moderate)",
+        workout: [
+          { name: "Leg Press (2-3 reps reserve)", sets: "3 sets × 10–12" },
+          { name: "Romanian Deadlift", sets: "2 sets × 10–12" },
+          { name: "Leg Curls", sets: "3 sets × 10–12" },
+          { name: "Calf Raises", sets: "3 sets × 12–15" }
+        ],
+        lunchDinner: "Chicken curry (150g) + cooked rice (150g)",
+        sides: "Cucumber & tomato salad",
+        prep: "Cook chicken curry for Wed & Fri (freeze Friday's box). Boil 12 eggs. Cook rajma for Thursday."
+      },
+      4: { // Thursday
+        day: "Thursday",
+        focus: "Shoulders",
+        workout: [
+          { name: "Seated DB Shoulder Press", sets: "3 sets × 10–12" },
+          { name: "DB Lateral Raises", sets: "4 sets × 12–15" },
+          { name: "Rear Delt Reverse Fly", sets: "3 sets × 12–15" },
+          { name: "DB Shrugs", sets: "3 sets × 12–15" }
+        ],
+        lunchDinner: "Rajma curry (150g) + cooked rice (150g)",
+        sides: "2 boiled eggs + 100g curd",
+        prep: ""
+      },
+      5: { // Friday
+        day: "Friday",
+        focus: "Arms & Abs",
+        workout: [
+          { name: "DB Bicep Curls", sets: "3 sets × 10–12" },
+          { name: "Hammer Curls", sets: "3 sets × 10–12" },
+          { name: "Triceps Rope Pushdown", sets: "3 sets × 10–12" },
+          { name: "Overhead Triceps Extension", sets: "3 sets × 10–12" },
+          { name: "Hanging Knee Raises", sets: "3 sets × 10–12" },
+          { name: "Forearm Plank", sets: "3 sets × 40 sec" }
+        ],
+        lunchDinner: "Chicken curry (defrost from Wed) + cooked rice (150g)",
+        sides: "Cucumber & tomato salad",
+        prep: ""
+      },
+      6: { // Saturday
+        day: "Saturday",
+        focus: "Rest / Active Play",
+        workout: [],
+        lunchDinner: "Soya pulao (40g dry soya + 150g rice)",
+        sides: "2 boiled eggs + 100g curd",
+        prep: "Cook soya chunk pulao in pressure cooker (15 min). Soak chana tonight for Tuesday."
+      }
+    };
+
+    let isBasketballToday = true;
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const current = routineData[dayOfWeek];
+
+    function toggleBasketball() {
+      isBasketballToday = !isBasketballToday;
+      const btn = document.getElementById("bballBtn");
+      if (isBasketballToday) {
+        btn.classList.add("active");
+        btn.innerText = "YES";
+        document.getElementById("basketballStatusText").innerText = "Lifting only at gym • 10-11 PM basketball";
+      } else {
+        btn.classList.remove("active");
+        btn.innerText = "NO";
+        document.getElementById("basketballStatusText").innerText = "Lifting + 25-30m Gym Cardio • No late basketball";
+      }
+      render();
+    }
+
+    function render() {
+      document.getElementById("todayDate").innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      document.getElementById("todayTitle").innerText = `${current.day}: ${current.focus}`;
+
+      // Prep Alert
+      const prepBox = document.getElementById("prepAlert");
+      if (current.prep) {
+        prepBox.style.display = "block";
+        document.getElementById("prepText").innerText = current.prep;
+      } else {
+        prepBox.style.display = "none";
+      }
+
+      // Meal List
+      const meals = [
+        { name: "Morning Weigh-in", meta: "Empty stomach on waking, track weekly average" },
+        { name: "Breakfast (7:15 AM)", meta: "60g oats in water + 4 whole eggs" },
+        { name: "Packed Lunch (1:00 PM)", meta: `${current.lunchDinner} + ${current.sides}` },
+        { name: "Pre-Gym Snack (5:15 PM)", meta: "1 banana + 1 wheat bread + 16g Pintola PB" },
+        { name: "Dinner (7:30 PM)", meta: `${current.lunchDinner} + ${current.sides}` },
+        { name: "Post-Dinner Treat (8:30 PM)", meta: "10–15g dark chocolate (2-3 squares)" },
+        isBasketballToday 
+          ? { name: "Post-Game Recovery (11:15 PM)", meta: "1 glass (250 ml) milk" }
+          : { name: "Night Snack (Optional)", meta: "100g light curd if hungry (skip milk)" }
+      ];
+
+      const mealListEl = document.getElementById("mealChecklist");
+      mealListEl.innerHTML = meals.map((m, i) => `
+        <div class="checklist-item">
+          <input type="checkbox" id="m_${dayOfWeek}_${i}">
+          <div>
+            <div>${m.name}</div>
+            <div class="item-meta">${m.meta}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Workout Details
+      const workoutEl = document.getElementById("workoutDetails");
+      document.getElementById("workoutName").innerText = current.focus;
+
+      if (dayOfWeek === 0) {
+        workoutEl.innerHTML = `<p style="color: var(--subtext); padding: 8px 0;">Full rest day! No gym, no cardio, no basketball. Let your body recover.</p>`;
+      } else if (dayOfWeek === 6) {
+        workoutEl.innerHTML = isBasketballToday 
+          ? `<p style="color: var(--subtext); padding: 8px 0;">No gym today. Rest up for 10 PM Basketball!</p>`
+          : `<p style="color: var(--subtext); padding: 8px 0;">Non-basketball Saturday: Do 30 min brisk incline walk or easy cycle.</p>`;
+      } else {
+        let exercisesHtml = `<ul class="exercise-list">` + 
+          current.workout.map(e => `<li><span>${e.name}</span><span class="reps">${e.sets}</span></li>`).join('') + 
+          `</ul>`;
+
+        if (!isBasketballToday) {
+          if (dayOfWeek === 3) {
+            exercisesHtml += `
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--card-border);">
+                <div style="color: var(--orange); font-weight: 600; font-size: 0.9rem;">Cardio (Leg Day Protection):</div>
+                <div class="item-meta">25 min stationary bike or 10-12% incline treadmill walk @ 5.5 km/h. (No sprints).</div>
+              </div>`;
+          } else {
+            exercisesHtml += `
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--card-border);">
+                <div style="color: var(--orange); font-weight: 600; font-size: 0.9rem;">Gym Cardio (25–30 min):</div>
+                <div class="item-meta">1. Treadmill: 1m @ 10-11 km/h + 2m walk @ 5-6 km/h (Repeat 6×)</div>
+                <div class="item-meta">2. Stationary Bike: 8–10 min steady cool-down</div>
+              </div>`;
+          }
+        }
+        workoutEl.innerHTML = exercisesHtml;
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
